@@ -1,4 +1,5 @@
 import * as Device from 'expo-device';
+import { Redirect } from 'expo-router';
 import { Platform, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -29,6 +30,11 @@ function getDevMenuHint() {
 }
 
 export default function HomeScreen() {
+  return <Redirect href="/customer/onboarding" />;
+}
+
+// Retain the original starter screen for reference.
+export function StarterHomeScreen() {
   return (
     <ThemedView style={styles.container}>
       <SafeAreaView style={styles.safeArea}>
