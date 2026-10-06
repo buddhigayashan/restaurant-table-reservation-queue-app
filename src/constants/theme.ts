@@ -4,16 +4,19 @@
  */
 
 import '@/global.css';
+import { palette } from './restaurant-theme';
 
 import { Platform } from 'react-native';
+export { palette, space, radius, typography, visual, statusTone } from './restaurant-theme';
+
 
 export const Colors = {
   light: {
-    text: '#000000',
-    background: '#ffffff',
-    backgroundElement: '#F0F0F3',
-    backgroundSelected: '#E0E1E6',
-    textSecondary: '#60646C',
+    text: palette.cocoa,
+    background: palette.cream,
+    backgroundElement: palette.sand,
+    backgroundSelected: palette.primarySoft,
+    textSecondary: palette.muted,
   },
   dark: {
     text: '#ffffff',

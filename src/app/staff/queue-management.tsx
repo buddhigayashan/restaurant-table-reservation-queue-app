@@ -1,3 +1,5 @@
+import { palette, accentCard } from '@/constants/restaurant-theme';
+import { StatusBadge } from '@/components/common/status-badge';
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
@@ -30,9 +32,9 @@ export default function QueueManagementScreen() {
             <LiveState state={tables} empty="No tables configured. You may seat without assigning a table."/>
         <View style={[ui.row, { flexWrap: 'wrap' }]}>
             <Pressable style={[ui.chip, !tableId && ui.selected]} onPress={() => setTableId('')}>
-            <Text style={{ color: !tableId ? '#fff' : '#111' }}>No table</Text>
+            <Text style={{ color: !tableId ? palette.white : palette.cocoa }}>No table</Text>
             </Pressable>{tables.rows.filter(table => table.status === 'available' && table.capacity >= called.partySize).map(table => <Pressable key={table.id} style={[ui.chip, tableId === table.id && ui.selected]} onPress={() => setTableId(table.id)}>
-                <Text style={{ color: tableId === table.id ? '#fff' : '#111' }}>{table.tableNumber} · {table.capacity}</Text>
+                <Text style={{ color: tableId === table.id ? palette.white : palette.cocoa }}>{table.tableNumber} · {table.capacity}</Text>
                 </Pressable>)}</View>
         <Action title="Seat Now" disabled={operation.loading || !!state.error} onPress={() => operation.run(async () => { await updateQueue('seat', called.id, tableId || undefined); setTableId(''); })}/>
       </>}
@@ -41,14 +43,14 @@ export default function QueueManagementScreen() {
     <Text style={ui.name}>Waiting list</Text>
     <Text style={ui.small}>Queue order</Text>
     </View>
-    {state.rows.map((entry, index) => <View key={entry.id} style={ui.card}>
+    {state.rows.map((entry, index) => <View key={entry.id} style={[ui.card, accentCard(entry.status)]}>
         <View style={ui.row}>
         <View style={ui.party}>
-        <Text style={{ color: '#fff' }}>{index + 1}</Text>
+        <Text style={{ color: palette.white }}>{index + 1}</Text>
         </View>
         <View style={{ flex: 1 }}>
         <Text style={ui.name}>{entry.customerName}</Text>
-        <Text style={ui.small}>Party of {entry.partySize} · ~{entry.estimatedWaitMinutes} min · {entry.status}</Text>
+        <Text style={ui.small}>Party of {entry.partySize} · ~{entry.estimatedWaitMinutes} min</Text><StatusBadge status={entry.status} />
         </View>
         <Pressable accessibilityRole="button" accessibilityLabel={`Cancel queue entry for ${entry.customerName}`} disabled={operation.loading} onPress={() => setCancelId(entry.id)}>
         <Text style={ui.small}>Remove</Text>

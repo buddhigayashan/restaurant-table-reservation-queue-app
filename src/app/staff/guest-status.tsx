@@ -1,3 +1,4 @@
+import { palette } from '@/constants/restaurant-theme';
 import { useState } from 'react';
 import { useLocalSearchParams } from 'expo-router';
 import { Text, View } from 'react-native';
@@ -18,13 +19,13 @@ export default function GuestStatusScreen() {
   const record = records.rows.find(item => item.id === reservationId);
   const transitions = record ? allowedTransitions(record.status) : [];
   const choices: [ReservationStatus, string][] = [['confirmed', 'Confirm Reservation'], ['arrived', 'Mark Arrived'], ['seated', 'Mark Seated'], ['completed', 'Mark Completed'], ['no_show', 'Mark No-show']];
-  return <StaffScreen title="Guest status" back><StaffAccess state={access} />{access.uid && <>
+  return <StaffScreen title="Guest status" back fallback={reservationId ? { pathname: '/staff/reservation-details', params: { reservationId } } : '/staff/reservation-management'}><StaffAccess state={access} />{access.uid && <>
     <StaffDataState state={records} empty="No reservations." />
     {!records.loading && !records.error && !record && <Text style={ui.muted}>Select a reservation first.</Text>}
     {record && <>
       <View style={ui.card}><View style={ui.row}><Text style={[ui.heading, { flex: 1 }]}>{record.customerName}</Text><Text style={ui.badge}>{record.status.replace('_', ' ')}</Text></View><Text style={ui.small}>{record.tableNumber ? `Table ${record.tableNumber}` : 'Unassigned'}</Text><Text style={ui.muted}>{record.date} · {record.time} · Party of {record.partySize}</Text></View>
       <Text style={ui.small}>STATUS</Text>
-      {['arrived', 'seated', 'completed'].map((status, index) => <View key={status} style={[ui.row, { paddingVertical: 10 }]}><View style={[ui.icon, { backgroundColor: record.status === status ? '#111' : '#EEE' }]}><Text style={{ color: record.status === status ? '#fff' : '#777' }}>{index + 1}</Text></View><View><Text style={ui.heading}>{status[0].toUpperCase() + status.slice(1)}</Text><Text style={ui.small}>{record.status === status ? 'Current status' : record.activity.some(item => item.status === status) ? 'Recorded' : 'Not current'}</Text></View></View>)}
+      {['arrived', 'seated', 'completed'].map((status, index) => <View key={status} style={[ui.row, { paddingVertical: 10 }]}><View style={[ui.icon, { backgroundColor: record.status === status ? palette.cocoa : palette.border }]}><Text style={{ color: record.status === status ? palette.white : palette.muted }}>{index + 1}</Text></View><View><Text style={ui.heading}>{status[0].toUpperCase() + status.slice(1)}</Text><Text style={ui.small}>{record.status === status ? 'Current status' : record.activity.some(item => item.status === status) ? 'Recorded' : 'Not current'}</Text></View></View>)}
       <OperationFeedback task={task} />
       {choices.map(([status, title]) => {
         const disabled = task.busy || !transitions.includes(status) || (['arrived', 'seated'].includes(status) && record.date !== localDate(now)) || (status === 'no_show' && !(arrivalMillis(record) <= now.getTime()));

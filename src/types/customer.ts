@@ -7,6 +7,7 @@ export type CustomerProfile = {
   phoneNumber: string;
   role: 'customer';
   createdAt: Timestamp | null;
+  notificationPreferences?: { bookingUpdates: boolean; queueUpdates: boolean };
 };
 
 export type CustomerSignUpInput = {

@@ -19,7 +19,7 @@ export default function MyBookingsScreen() {
       <Choices options={['Upcoming', 'Past']} value={tab} onChange={setTab} />
       <RecordState state={state} empty="You have no reservations yet." />
       {!state.loading && !state.error && state.rows.length > 0 && records.length === 0 && <Text style={styles.muted}>No {tab.toLowerCase()} bookings.</Text>}
-      {records.map(booking => <BookingCard key={booking.id} booking={booking} onPress={editableBooking(booking, now) ? () => router.push({ pathname: '/customer/edit-cancel-booking', params: { reservationId: booking.id } }) : undefined} />)}
+      {records.map(booking => <BookingCard key={booking.id} booking={booking} onPress={editableBooking(booking, now) ? () => router.push({ pathname: '/customer/edit-cancel-booking', params: { reservationId: booking.id } }) : () => router.push({ pathname: '/customer/booking-confirmation', params: { id: booking.id } })} />)}
       <Button title="+ New booking" onPress={() => router.push('/customer/booking-form')} />
     </>}
   </ModuleScreen>;

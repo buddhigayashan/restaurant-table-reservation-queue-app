@@ -35,6 +35,8 @@ export async function updateOperationalReservation(id: string, action: { status?
     if (oldTable?.exists() && oldTable.data().reservationId && oldTable.data().reservationId !== id) throw new Error('The old table belongs to another reservation.');
     const finalStatus = action.status || record.status;
     const closing = ['completed', 'cancelled', 'no_show'].includes(finalStatus);
+    const readyReference = record.customerId && finalStatus === 'arrived' && nextTableId ? doc(db, 'customerNotifications', `${id}-table-ready-${nextTableId}`) : null;
+    const existingReady = readyReference ? await tx.get(readyReference) : null;
     assertSession(staff.uid);
     if (oldTable?.exists() && (closing || nextTableId !== record.tableId)) {
       tx.update(oldTable.ref, { status: record.status === 'seated' || oldTable.data().status === 'occupied' ? 'cleaning' : 'available', reservationId: null, updatedAt: serverTimestamp() });
@@ -49,6 +51,7 @@ export async function updateOperationalReservation(id: string, action: { status?
     const message = `${record.customerName}: ${record.date} at ${record.time}, ${record.partySize} guests.`;
     tx.set(doc(db, 'staffAlerts', `${id}-${changeId}`), { type: action.status === 'cancelled' ? 'cancellation' : action.status === 'no_show' ? 'no_show' : 'reservation_changed', title, message, reservationId: id, severity: action.status === 'no_show' ? 'warning' : 'info', read: false, createdAt: serverTimestamp() });
     tx.set(doc(db, 'kitchenAlerts', `staff-${id}-${changeId}`), { type: action.status === 'cancelled' ? 'cancellation' : 'reservation_change', title, message, reservationId: id, severity: 'info', acknowledged: false, createdAt: serverTimestamp() });
-    if (record.customerId && action.status) tx.set(doc(db, 'customerNotifications', `staff-${id}-${action.status}`), { customerId: record.customerId, type: 'booking_changed', title, message, reservationId: id, read: false, createdAt: serverTimestamp() });
+    if (readyReference && !existingReady?.exists()) tx.set(readyReference, { customerId: record.customerId, type: 'table_ready', title: 'Your table is ready', message: 'Your assigned table is ready. Please speak to the restaurant team.', reservationId: id, read: false, createdAt: serverTimestamp() });
+    if (record.customerId && action.status && !readyReference) tx.set(doc(db, 'customerNotifications', `staff-${id}-${action.status}`), { customerId: record.customerId, type: 'booking_changed', title, message, reservationId: id, read: false, createdAt: serverTimestamp() });
   });
 }

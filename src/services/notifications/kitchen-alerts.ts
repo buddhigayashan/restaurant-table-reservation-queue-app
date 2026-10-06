@@ -1,3 +1,4 @@
+import { authorizeOperation, requireOperationsStaff } from '@/services/staff/operations-access';
 import { collection, doc, onSnapshot, runTransaction, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/config/firebase';
 import { activeReservation, arrivalMillis } from '@/features/kitchen/operations';
@@ -12,7 +13,9 @@ export function listenKitchenAlerts(next: (alerts: KitchenAlert[]) => void, fail
     }).sort((a, b) => b.createdAtMillis - a.createdAtMillis)), fail);
 }
 export async function acknowledgeKitchenAlert(id: string) {
+    const staff = await requireOperationsStaff(true);
     await runTransaction(db, async (transaction) => {
+            await authorizeOperation(transaction, staff.uid, true);
         const reference = doc(db, 'kitchenAlerts', id);
         if (!(await transaction.get(reference)).exists())
             throw new Error('Alert no longer exists.');
@@ -20,10 +23,12 @@ export async function acknowledgeKitchenAlert(id: string) {
     });
 }
 export async function generateLargePartyAlerts(records: ReservationRecord[]) {
+    const staff = await requireOperationsStaff(true);
     // Explicit kitchen action; no background engine. One alert per reservation.
     const eligible = records.filter(record => activeReservation(record) && record.partySize >= 8 && arrivalMillis(record) >= Date.now());
     for (const record of eligible) {
         await runTransaction(db, async (transaction) => {
+            await authorizeOperation(transaction, staff.uid, true);
             const reservation = await transaction.get(doc(db, 'reservations', record.id));
             const reference = doc(db, 'kitchenAlerts', `large-group-${record.id}`);
             const alert = await transaction.get(reference);

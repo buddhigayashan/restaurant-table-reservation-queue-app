@@ -1,3 +1,5 @@
+import { palette } from '@/constants/restaurant-theme';
+import { Icon } from '@/components/common/app-icon';
 import { useState } from 'react';
 import { router } from 'expo-router';
 import { Pressable, Text, View } from 'react-native';
@@ -11,7 +13,7 @@ export default function StaffLoginScreen() {
   const [visible, setVisible] = useState(false);
   const task = useTask();
   return <ModuleScreen title="">
-    <View style={{ alignItems: 'center', gap: 12, paddingVertical: 32 }}><View style={styles.dateBadge}><Text style={{ color: '#fff', fontSize: 24 }}>🍴</Text></View><Text style={styles.badge}>● STAFF</Text></View>
+    <View style={{ alignItems: 'center', gap: 12, paddingVertical: 32 }}><View style={styles.dateBadge}><Icon name="restaurant" size={24} color={palette.white} /></View><Text style={styles.badge}>● STAFF</Text></View>
     <Text style={styles.title}>Staff sign in</Text><Text style={styles.muted}>For restaurant team members only</Text>
     <Field label="Staff email" value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" autoComplete="email" placeholder="staff@restaurant.com" editable={!task.busy} />
     <Field label="Password" value={password} onChangeText={setPassword} secureTextEntry={!visible} autoCapitalize="none" autoComplete="current-password" placeholder="Enter your password" editable={!task.busy} />
@@ -20,8 +22,9 @@ export default function StaffLoginScreen() {
     <Button title="Sign In" disabled={task.busy} onPress={() => task.run(async () => {
       const profile = await staffLogin(email, password);
       setPassword('');
-      router.replace(profile.role === 'manager' ? '/staff/account-management' : profile.role === 'kitchen' ? '/kitchen/upcoming-reservations' : '/staff/dashboard');
+      router.replace(profile.role === 'kitchen' ? '/kitchen/upcoming-reservations' : '/staff/dashboard');
     })} />
+    <Button title="Customer sign in" outline onPress={() => router.replace('/customer/login')} />
     <Text style={[styles.small, { textAlign: 'center', marginTop: 40 }]}>Having trouble accessing your account?{ '\n' }Contact your restaurant manager for support.</Text>
   </ModuleScreen>;
 }

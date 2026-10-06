@@ -23,8 +23,8 @@ export async function requireOperationsStaff(profileOnly = false) {
   if (!snapshot.exists()) throw new Error('No staff profile exists for this account.');
   return validateAccess(uid, snapshot.data(), profileOnly);
 }
-export async function authorizeOperation(tx: Transaction, uid: string) {
+export async function authorizeOperation(tx: Transaction, uid: string, profileOnly = false) {
   const profile = await tx.get(doc(db, 'staffAccounts', uid));
   if (!profile.exists()) throw new Error('No staff profile exists.');
-  return validateAccess(uid, profile.data(), false);
+  return validateAccess(uid, profile.data(), profileOnly);
 }

@@ -1,3 +1,5 @@
+import { statusTone, accentCard } from '@/constants/restaurant-theme';
+import { Icon } from '@/components/common/app-icon';
 import { router } from 'expo-router';
 import { Pressable, Text, View } from 'react-native';
 import { StaffAccess, StaffButton, StaffDataState, StaffScreen, ui } from '@/components/staff/operations-ui';
@@ -21,13 +23,13 @@ export default function DashboardScreen() {
     [today.filter(item => item.status === 'no_show').length, 'No-shows'],
   ];
   const rush = alerts.rows.filter(item => item.type === 'rush' && !item.read).sort((a, b) => b.createdAtMillis - a.createdAtMillis)[0];
-  return <StaffScreen title="Today" active="Dashboard" right={<Pressable accessibilityRole="link" accessibilityLabel="My staff profile" style={ui.icon} onPress={() => router.push('/staff/profile')}><Text style={ui.heading}>♙</Text></Pressable>}>
+  return <StaffScreen title="Today" active="Dashboard" right={<Pressable accessibilityRole="link" accessibilityLabel="My staff profile" style={ui.icon} onPress={() => router.push('/staff/profile')}><Icon name="person" /></Pressable>}>
     <Text style={ui.small}>{now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</Text>
     <StaffAccess state={access} />
     {access.uid && <>
       {[reservations, tables, queue, alerts].map((state, index) => <StaffDataState key={index} state={state} empty="" />)}
       {ready && <>
-        <View style={[ui.row, { flexWrap: 'wrap' }]}>{metrics.map(([value, label]) => <View key={label} style={[ui.card, { width: '48%', minHeight: 100 }]}><Text style={{ color: '#111', fontSize: 24, fontWeight: '700' }}>{value}</Text><Text style={ui.small}>{label}</Text></View>)}</View>
+        <View style={[ui.row, { flexWrap: 'wrap' }]}>{metrics.map(([value, label]) => <View key={label} style={[ui.card, accentCard(label === 'No-shows' ? 'no_show' : label === 'Parties in queue' ? 'waiting' : label === 'Tables occupied' ? 'occupied' : 'confirmed'), { width: '48%', minHeight: 110 }]}><Text style={{ color: statusTone(label === 'No-shows' ? 'no_show' : label === 'Parties in queue' ? 'waiting' : label === 'Tables occupied' ? 'occupied' : 'confirmed').foreground, fontSize: 30, fontWeight: '700' }}>{value}</Text><Text style={ui.small}>{label}</Text></View>)}</View>
         <Text style={ui.small}>{tables.rows.filter(item => item.status === 'available').length} available tables · {today.filter(item => item.status === 'cancelled').length} cancellations today</Text>
         {rush && <View style={ui.card}><Text style={ui.heading}>◷ {rush.title}</Text><Text style={ui.muted}>{rush.message}</Text></View>}
       </>}
@@ -36,7 +38,10 @@ export default function DashboardScreen() {
       <StaffButton title="Booking history  ›" outline onPress={() => router.push('/staff/booking-history')} />
       <StaffButton title="Staff alerts  ›" outline onPress={() => router.push('/staff/alerts')} />
       {access.profile?.role === 'manager' && <><Text style={ui.heading}>Manager tools</Text>{([
-        ['Staff Accounts', '/staff/account-management'], ['Restaurant Settings', '/staff/restaurant-settings'], ['Table Setup', '/staff/table-setup'], ['Reports', '/staff/reports-analytics'],
+        ['Staff Accounts', '/staff/account-management'],
+        ['Restaurant Settings', '/staff/restaurant-settings'],
+        ['Table Setup', '/staff/table-setup'],
+        ['Reports & Analytics', '/staff/reports-analytics'],
       ] as const).map(([label, href]) => <StaffButton key={label} title={`${label}  ›`} outline onPress={() => router.push(href)} />)}</>}
     </>}
   </StaffScreen>;

@@ -10,17 +10,21 @@ const ts = require('typescript');
 const vm = require('node:vm');
 
 function harness(initial = {}) {
-  const records = structuredClone(initial);
+  const records = { 'staffAccounts/staff': { uid: 'staff', email: 'staff@example.com', role: 'staff', isActive: true }, ...structuredClone(initial) };
+  const auth = { currentUser: { uid: 'staff', email: 'staff@example.com' } };
+  let sequence = 0;
   const cache = {};
   const snapshot = (ref) => ({ id: ref.id, ref, exists: () => !!records[ref.path], data: () => records[ref.path] });
   const firebase = {
     collection: (_, name) => name,
-    doc: (_, name, id) => ({ id, path: `${name}/${id}` }),
-    where: () => null,
-    query: (name) => name,
+    doc: (first, name, id) => { if (typeof first === 'string') { id = `generated-${++sequence}`; name = first; } return { id, path: `${name}/${id}` }; },
+    getDoc: async ref => snapshot(ref),
+    where: (field, op, value) => ({ field, op, value }),
+    query: (name, filter) => ({ name, filter }),
     serverTimestamp: () => 'mock-timestamp',
-    getDocs: async () => {
-      const docs = Object.keys(records).filter(key => key.startsWith('queueEntries/') && ['waiting', 'called'].includes(records[key].status)).map(key => snapshot({ path: key, id: key.split('/')[1] }));
+    getDocs: async query => {
+      const q = typeof query === 'string' ? { name: query } : query;
+      const docs = Object.keys(records).filter(key => key.startsWith(`${q.name}/`) && (!q.filter || (q.filter.op === 'in' ? q.filter.value.includes(records[key][q.filter.field]) : records[key][q.filter.field] === q.filter.value))).map(key => snapshot({ path: key, id: key.split('/')[1] }));
       return { docs, size: docs.length };
     },
     runTransaction: async (_, action) => {
@@ -47,8 +51,9 @@ function harness(initial = {}) {
     const source = ts.transpileModule(fs.readFileSync(filename, 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020 } }).outputText;
     vm.runInThisContext(`(function(require,module,exports){${source}\n})`, { filename })(name => {
       if (name === 'firebase/firestore') return firebase;
-      if (name === '@/config/firebase') return { db: {} };
+      if (name === '@/config/firebase') return { auth, db: {} };
       if (name.startsWith('@/')) return load(`src/${name.slice(2)}.ts`);
+      if (name.startsWith('.')) return load(path.relative(path.resolve(__dirname, '..'), path.resolve(path.dirname(filename), `${name}.ts`)));
       throw new Error(`Unexpected import ${name}`);
     }, module, module.exports);
     return module.exports;
@@ -70,15 +75,15 @@ test('table CRUD validates capacity, duplicates and occupied deletion', async ()
   const service = load('src/services/tables/management.ts');
   const table = { tableNumber: 'T1', capacity: 4, status: 'available', area: 'Main Floor' };
   await assert.rejects(service.saveTable({ ...table, capacity: 0 }), /Capacity/);
-  await service.saveTable(table);
+  const id = await service.saveTable(table);
   await assert.rejects(service.saveTable(table), /already exists/);
-  await service.saveTable({ ...table, capacity: 6 }, 'T1');
-  assert.equal(records['tables/T1'].capacity, 6);
-  await service.changeTableStatus('T1', 'occupied');
-  await assert.rejects(service.removeTable('T1'), /Only available/);
-  await service.changeTableStatus('T1', 'cleaning');
-  await service.removeTable('T1');
-  assert.equal(records['tables/T1'], undefined);
+  await service.saveTable({ ...table, capacity: 6 }, id);
+  assert.equal(records[`tables/${id}`].capacity, 6);
+  await service.changeTableStatus(id, 'occupied');
+  await assert.rejects(service.removeTable(id), /in use/);
+  await service.changeTableStatus(id, 'cleaning');
+  await service.removeTable(id);
+  assert.equal(records[`tables/${id}`], undefined);
 });
 
 test('malformed table status reaches listener error callback', () => {

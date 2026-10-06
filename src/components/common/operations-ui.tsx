@@ -1,4 +1,6 @@
-import { router, type Href } from 'expo-router';
+import { palette, radius, space, typography, visual, accentCard } from '@/constants/restaurant-theme';
+import { StatusBadge } from './status-badge';
+import { AppNavigation, StaffProfileLink } from './app-navigation';
 import { StatusBar } from 'expo-status-bar';
 import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View, type TextInputProps } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -8,30 +10,22 @@ export function OperationalScreen({ children, area, active }: PropsWithChildren<
     area: 'kitchen' | 'staff';
     active: string;
 }>) {
-    const links: [
-        string,
-        Href
-    ][] = area === 'kitchen' ? [
-        ['Upcoming', '/kitchen/upcoming-reservations'], ['Today', '/kitchen/today'], ['Alerts', '/kitchen/alerts'],
-    ] : [['Dashboard', '/staff/dashboard'], ['Reservations', '/staff/reservation-management'], ['Tables', '/staff/table-floor-management'], ['Queue', '/staff/queue-management'], ['Alerts', '/staff/alerts']];
     return <SafeAreaView style={ui.safe}>
     <StatusBar style="dark"/>
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-    <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={ui.page}>{children}</ScrollView>
-    <View style={ui.nav}>{links.map(([label, href]) => <Pressable key={label} accessibilityRole="link" accessibilityState={{ selected: active === label }} onPress={() => router.replace(href)} style={ui.navLink}>
-        <Text style={[ui.navText, active === label && { color: '#111', fontWeight: '700' }]}>{label}</Text>
-        </Pressable>)}</View>
+    <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={ui.page}><StaffProfileLink />{children}</ScrollView>
+    <AppNavigation area={area} active={active} />
   </KeyboardAvoidingView>
     </SafeAreaView>;
 }
 export function Action({ title, onPress, disabled = false, outline = false }: {
     title: string;
-    onPress?: () => void;
+    onPress: () => void;
     disabled?: boolean;
     outline?: boolean;
 }) {
-    return <Pressable accessibilityRole="button" disabled={disabled} accessibilityState={{ disabled }} onPress={onPress} style={[ui.button, outline && ui.outline, disabled && { opacity: 0.45 }]}>
-    <Text style={[ui.buttonText, outline && { color: '#111' }]}>{title}</Text>
+    return <Pressable accessibilityRole="button" disabled={disabled} accessibilityState={{ disabled }} onPress={onPress} style={[ui.button, outline && ui.outline, disabled && { opacity: 0.55 }]}>
+    <Text style={[ui.buttonText, outline && { color: palette.cocoa }]}>{title}</Text>
     </Pressable>;
 }
 export function Input({ label, ...props }: TextInputProps & {
@@ -39,7 +33,7 @@ export function Input({ label, ...props }: TextInputProps & {
 }) {
     return <View style={{ gap: 6 }}>
     <Text style={ui.small}>{label}</Text>
-    <TextInput accessibilityLabel={label} placeholderTextColor="#888" {...props} style={[ui.input, props.style]}/>
+    <TextInput accessibilityLabel={label} placeholderTextColor={palette.muted} {...props} style={[ui.input, props.style]}/>
     </View>;
 }
 export function Feedback({ message }: {
@@ -57,7 +51,7 @@ export function LiveState({ state, empty }: {
     empty: string;
 }) {
     if (state.loading)
-        return <ActivityIndicator color="#111" accessibilityLabel="Loading data"/>;
+        return <ActivityIndicator color={palette.primary} accessibilityLabel="Loading data"/>;
     if (state.error)
         return <View style={ui.card}>
         <Feedback message={state.error}/>
@@ -69,27 +63,27 @@ export function ReservationCard({ record, countdown }: {
     record: ReservationRecord;
     countdown?: number;
 }) {
-    return <View style={ui.card}>
+    return <View style={[ui.card, accentCard(record.status)]}>
     <View style={ui.row}>
     <View style={ui.party}>
-    <Text style={{ color: '#fff', fontWeight: '700' }}>{record.partySize}</Text>
+    <Text style={{ color: palette.white, fontWeight: '700' }}>{record.partySize}</Text>
     </View>
     <View style={{ flex: 1, gap: 4 }}>
     <Text style={ui.name}>{record.customerName}</Text>
     <Text style={ui.small}>{record.tableNumber ? `Table ${record.tableNumber}` : 'Table unassigned'} · {record.seatingPreference || 'No seating preference'}</Text>
     </View>{countdown !== undefined && <Text style={ui.small}>in {countdown} min</Text>}</View>
-    <Text style={ui.small}>{record.time} · {record.status}</Text>{record.specialRequest ? <Text style={ui.tag}>{record.specialRequest}</Text> : null}{record.partySize >= 8 && <Text style={ui.tag}>LARGE GROUP</Text>}</View>;
+    <View style={ui.row}><Text style={ui.small}>{record.time}</Text><StatusBadge status={record.status} /></View>{record.specialRequest ? <Text style={ui.tag}>{record.specialRequest}</Text> : null}{record.partySize >= 8 && <Text style={ui.tag}>LARGE GROUP</Text>}</View>;
 }
 export const ui = StyleSheet.create({
-    safe: { flex: 1, backgroundColor: '#fff' }, page: { padding: 20, gap: 16, flexGrow: 1, maxWidth: 600, width: '100%', alignSelf: 'center' },
-    title: { fontSize: 25, fontWeight: '700', color: '#111' }, name: { fontSize: 15, fontWeight: '600', color: '#111' },
-    muted: { fontSize: 13, lineHeight: 20, color: '#737373' }, small: { fontSize: 12, lineHeight: 18, color: '#666' },
-    row: { flexDirection: 'row', gap: 12, alignItems: 'center' }, card: { backgroundColor: '#F5F5F5', borderRadius: 12, padding: 16, gap: 10 },
-    tag: { fontSize: 11, color: '#555', backgroundColor: '#fff', padding: 6, borderRadius: 6, overflow: 'hidden' },
-    party: { backgroundColor: '#111', width: 36, height: 36, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
-    button: { backgroundColor: '#111', padding: 14, borderRadius: 10, minHeight: 48, alignItems: 'center', justifyContent: 'center' }, buttonText: { color: '#fff', fontSize: 14, fontWeight: '600' },
-    outline: { backgroundColor: '#fff', borderWidth: 1, borderColor: '#DDD' }, input: { backgroundColor: '#F5F5F5', borderRadius: 10, padding: 14, fontSize: 14, color: '#111', minHeight: 48 },
-    chip: { padding: 12, borderRadius: 10, backgroundColor: '#F5F5F5', minHeight: 44 }, selected: { backgroundColor: '#111' },
-    nav: { flexDirection: 'row', borderTopWidth: 1, borderColor: '#EEE', padding: 8, justifyContent: 'space-around' }, navLink: { minHeight: 44, justifyContent: 'center', paddingHorizontal: 5 }, navText: { fontSize: 11, color: '#888' },
-    error: { color: '#9B3030', fontSize: 13, lineHeight: 20 }, grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 }, table: { width: '30%', minHeight: 100, borderWidth: 1, borderColor: '#DDD', borderRadius: 12, padding: 10, alignItems: 'center', justifyContent: 'center', gap: 5 },
+    safe: visual.screen, page: { padding: space.page, gap: space.card, flexGrow: 1, maxWidth: 600, width: '100%', alignSelf: 'center' },
+    title: { fontSize: typography.title, fontWeight: '700', color: palette.cocoa }, name: { fontSize: typography.label, fontWeight: '600', color: palette.cocoa },
+    muted: { fontSize: 13, lineHeight: 20, color: palette.muted }, small: { fontSize: typography.caption, lineHeight: 18, color: palette.muted },
+    row: { flexDirection: 'row', gap: 12, alignItems: 'center' }, card: { ...visual.card, gap: space.md },
+    tag: { fontSize: 11, color: palette.muted, backgroundColor: palette.white, padding: 6, borderRadius: 6, overflow: 'hidden' },
+    party: { backgroundColor: palette.olive, width: 36, height: 36, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
+    button: { ...visual.button, alignItems: 'center', justifyContent: 'center' }, buttonText: { color: palette.white, fontSize: typography.body, fontWeight: '600' },
+    outline: { backgroundColor: palette.white, borderWidth: 1, borderColor: palette.border }, input: { ...visual.input, padding: space.card, fontSize: typography.body },
+    chip: { padding: 12, borderRadius: radius.input, backgroundColor: palette.sand, minHeight: 44 }, selected: { backgroundColor: palette.primary },
+    nav: { flexDirection: 'row', borderTopWidth: 1, borderColor: palette.border, padding: 8, justifyContent: 'space-around' }, navLink: { minHeight: 44, justifyContent: 'center', paddingHorizontal: 5 }, navText: { fontSize: 11, color: palette.muted },
+    error: { color: palette.danger, fontSize: 13, lineHeight: 20 }, grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 }, table: { width: '30%', minHeight: 100, borderWidth: 1, borderColor: palette.border, borderRadius: radius.chip, padding: 10, alignItems: 'center', justifyContent: 'center', gap: 5 },
 });

@@ -1,7 +1,8 @@
 import { onAuthStateChanged, type User } from 'firebase/auth';
 import { useEffect, useState } from 'react';
-import { auth } from '@/config/firebase';
-import { getCustomerProfile } from '@/services/auth/customer';
+import { doc, onSnapshot } from 'firebase/firestore';
+import { auth, db } from '@/config/firebase';
+
 import type { CustomerProfile } from '@/types/customer';
 import { customerErrorMessage } from '../errors';
 
@@ -11,21 +12,19 @@ export function useCustomer() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   useEffect(() => {
-    let active = true;
-    let version = 0;
-    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-      const request = ++version;
-      setUser(currentUser); setProfile(null); setError(''); setLoading(true);
-      try {
-        const result = currentUser ? await getCustomerProfile(currentUser.uid) : null;
-        if (active && request === version) setProfile(result);
-      } catch (err) {
-        if (active && request === version) setError(customerErrorMessage(err));
-      } finally {
-        if (active && request === version) setLoading(false);
-      }
+    let stopProfile = () => {};
+    const unsubscribe = onAuthStateChanged(auth, currentUser => {
+      stopProfile(); setUser(currentUser); setProfile(null); setError(''); setLoading(!!currentUser);
+      if (!currentUser) return;
+      stopProfile = onSnapshot(doc(db, 'users', currentUser.uid), snapshot => {
+        if (auth.currentUser?.uid !== currentUser.uid) return;
+        const data = snapshot.data();
+        if (!data || data.role !== 'customer') { setProfile(null); setError('A customer profile is required.'); setLoading(false); return; }
+        setProfile({ uid: currentUser.uid, fullName: String(data.fullName || ''), email: String(data.email || ''), phoneNumber: String(data.phoneNumber || ''), role: 'customer', createdAt: data.createdAt ?? null, notificationPreferences: data.notificationPreferences });
+        setError(''); setLoading(false);
+      }, err => { setProfile(null); setError(customerErrorMessage(err)); setLoading(false); });
     });
-    return () => { active = false; unsubscribe(); };
+    return () => { stopProfile(); unsubscribe(); };
   }, []);
   return { user, profile, loading, error };
 }

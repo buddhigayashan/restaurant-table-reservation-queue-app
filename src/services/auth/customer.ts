@@ -27,6 +27,7 @@ export async function getCustomerProfile(uid: string): Promise<CustomerProfile |
     phoneNumber: typeof data.phoneNumber === 'string' ? data.phoneNumber : '',
     role: 'customer',
     createdAt: data.createdAt ?? null,
+    notificationPreferences: data.notificationPreferences,
   };
 }
 

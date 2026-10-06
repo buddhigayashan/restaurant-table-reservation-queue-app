@@ -40,6 +40,7 @@ export function friendlyError(error: unknown) {
   const code = (error as { code?: string })?.code;
   if (code === 'permission-denied') return 'Access denied by Firestore. Contact the restaurant manager.';
   if (['auth/invalid-credential', 'auth/wrong-password', 'auth/user-not-found'].includes(code || '')) return 'Email or password is incorrect.';
+  if (code === 'auth/requires-recent-login') return 'Sign in again, then retry changing your password with your current password.';
   if (code === 'auth/too-many-requests') return 'Too many attempts. Please try again later.';
   if (code === 'auth/invalid-email') return 'Enter a valid email address.';
   if (code === 'unavailable' || code === 'auth/network-request-failed') return 'Unable to connect. Check your internet connection.';

@@ -1,17 +1,20 @@
-import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
+import { palette } from '@/constants/restaurant-theme';
+import { DefaultTheme, Stack, ThemeProvider } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { useColorScheme } from 'react-native';
 
-import { AnimatedSplashOverlay } from '@/components/animated-icon';
+import { SessionProvider } from '@/features/auth/session';
+
+import { useEffect } from 'react';
 
 SplashScreen.preventAutoHideAsync();
 
+const restaurantNavigationTheme = { ...DefaultTheme, colors: { ...DefaultTheme.colors, background: palette.cream, card: palette.cream, text: palette.cocoa, border: palette.border, primary: palette.primary } };
+
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
+  useEffect(() => { SplashScreen.hide(); }, []);
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <AnimatedSplashOverlay />
-      <Stack screenOptions={{ headerShown: false }} />
+    <ThemeProvider value={restaurantNavigationTheme}>
+      <SessionProvider><Stack screenOptions={{ headerShown: false }} /></SessionProvider>
     </ThemeProvider>
   );
 }

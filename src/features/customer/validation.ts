@@ -33,8 +33,8 @@ export function validateBooking(input: BookingInput, now = new Date()): string |
     selected.getDate() !== day
   ) return 'Choose a valid date.';
   if (selected <= now) return 'Choose a future date and time.';
-  if (!Number.isInteger(input.partySize) || input.partySize < 1) {
-    return 'Enter a guest count greater than zero.';
+  if (!Number.isInteger(input.partySize) || input.partySize < 1 || input.partySize > 20) {
+    return 'Enter a guest count from 1 to 20.';
   }
   if (input.specialRequest.length > 500) return 'Keep special requests within 500 characters.';
   return null;

@@ -1,3 +1,4 @@
+import { palette, typography } from '@/constants/restaurant-theme';
 import { Text, View } from 'react-native';
 import { OperationalScreen, ReservationCard, LiveState, ui } from '@/components/common/operations-ui';
 import { useLiveRecords, useClock } from '@/features/kitchen/hooks/use-operations';
@@ -14,10 +15,10 @@ export default function TodayScreen() {
     <Text style={ui.small}>{new Date(now).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</Text>
     </View>
     <Text style={ui.muted}>Live arrivals for your kitchen staff</Text>
-    <View style={[ui.card, { backgroundColor: '#111' }]}>
-    <Text style={{ color: '#AAA', fontSize: 12 }}>TOTAL EXPECTED · NEXT HOUR</Text>
-    <Text style={{ fontSize: 38, color: '#fff', fontWeight: '700' }}>{state.loading || state.error ? '—' : soon.reduce((sum, record) => sum + record.partySize, 0)}</Text>
-    <Text style={{ color: '#DDD' }}>Guests arriving</Text>
+    <View style={[ui.card, { backgroundColor: palette.olive }]}>
+    <Text style={{ color: palette.onDarkMuted, fontSize: typography.caption }}>TOTAL EXPECTED · NEXT HOUR</Text>
+    <Text style={{ fontSize: 38, color: palette.white, fontWeight: '700' }}>{state.loading || state.error ? '—' : soon.reduce((sum, record) => sum + record.partySize, 0)}</Text>
+    <Text style={{ color: palette.onDarkMuted }}>Guests arriving</Text>
     </View>
     <LiveState state={state} empty="No reservations yet."/>
     {!state.loading && !state.error && soon.length === 0 && <Text style={ui.muted}>No arrivals expected in the next hour.</Text>}

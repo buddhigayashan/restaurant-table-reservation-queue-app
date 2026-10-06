@@ -1,3 +1,4 @@
+import { palette } from '@/constants/restaurant-theme';
 import { useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { Input, OperationalScreen, ReservationCard, LiveState, ui } from '@/components/common/operations-ui';
@@ -14,7 +15,7 @@ export default function UpcomingReservationsScreen() {
     return <OperationalScreen area="kitchen" active="Upcoming">
     <Text style={ui.title}>Upcoming</Text>
     <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>{dates.map(date => <Pressable key={date.value} accessibilityRole="button" accessibilityState={{ selected: date.value === selected }} onPress={() => setSelected(date.value)} style={[ui.chip, date.value === selected && ui.selected]}>
-        <Text style={{ color: date.value === selected ? '#fff' : '#111' }}>{date.label}</Text>
+        <Text style={{ color: date.value === selected ? palette.white : palette.cocoa }}>{date.label}</Text>
         </Pressable>)}</ScrollView>
     <Search value={search} onChange={setSearch}/>
     <LiveState state={state} empty="No reservations yet."/>
