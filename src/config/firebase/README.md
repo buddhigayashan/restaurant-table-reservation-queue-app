@@ -24,10 +24,6 @@ browser persistence. Use this central module instead of initializing Auth in
 other files. index.ts obtains the default Firestore database client.
 For a named Firestore database, its ID must be configured separately.
 
-Restart Expo after filling or changing .env. Missing values produce a clear
-configuration error when the module is imported. Screens do not import it yet,
-so the existing placeholders can start before local values are supplied.
+Restart Expo after filling or changing .env. Missing values produce a clear configuration error when the module is imported. Production services use this shared configuration; individual screens do not initialize Firebase.
 
-No authentication flows, CRUD calls, collections, notification delivery, Admin
-SDK, or service-account credentials are included. Firestore access rules and
-device testing remain future work.
+Customer and staff authentication, guarded Firestore operations and realtime listeners are implemented in the service directories. This configuration module itself creates no collections or test records. No Admin SDK or service-account credentials are included. Firestore rule hardening and integrated physical device testing are documented in `docs/final-route-audit.md`.
